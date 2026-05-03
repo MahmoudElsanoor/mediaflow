@@ -1,8 +1,38 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+
+import ReviewCard from "@/components/ReviewCard";
+import { initialVideos } from "@/data/mockVideos";
+import type { MockVideo, ReviewStatus } from "@/types/video";
+
+const statusStyles: Record<ReviewStatus, string> = {
+  Pending: "bg-amber-400/15 text-amber-200",
+  Approved: "bg-green-400/15 text-green-200",
+  Rejected: "bg-red-400/15 text-red-200",
+};
 
 export default function FeedPage() {
+  const [videos, setVideos] = useState<MockVideo[]>(initialVideos);
+
+  function updateVideo(id: number, updates: Partial<MockVideo>) {
+    setVideos((currentVideos) =>
+      currentVideos.map((video) =>
+        video.id === id ? { ...video, ...updates } : video,
+      ),
+    );
+  }
+
+  function saveNote(id: number, commentText: string) {
+    updateVideo(id, {
+      savedNote: commentText,
+      isCommentOpen: false,
+    });
+  }
+
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-neutral-950 px-6 text-white">
+    <main className="relative min-h-screen bg-neutral-950 px-5 py-24 text-white">
       <header className="absolute left-0 top-0 flex w-full items-center justify-between px-6 py-5">
         <Link
           href="/"
@@ -13,13 +43,16 @@ export default function FeedPage() {
         <span className="text-sm font-semibold text-white">MediaFlow</span>
       </header>
 
-      <section className="flex w-full max-w-sm flex-col items-center text-center">
-        <h1 className="text-3xl font-semibold tracking-normal">
-          Feed Coming Next
-        </h1>
-        <p className="mt-3 text-sm text-neutral-300">
-          MediaFlow Review Feed
-        </p>
+      <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
+        {videos.map((video) => (
+          <ReviewCard
+            key={video.id}
+            video={video}
+            statusStyles={statusStyles}
+            onUpdateVideo={updateVideo}
+            onSaveNote={saveNote}
+          />
+        ))}
       </section>
     </main>
   );
