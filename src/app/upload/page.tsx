@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { supabase } from "@/lib/supabase";
+
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [publicUrl, setPublicUrl] = useState("");
 
   useEffect(() => {
     if (!previewUrl) {
@@ -23,7 +29,7 @@ export default function UploadPage() {
     : null;
   const hasVideo = Boolean(selectedFile);
   const hasTitle = videoTitle.trim().length > 0;
-  const canSave = hasVideo && hasTitle;
+  const canSave = hasVideo && hasTitle && !isUploading;
   const validationMessage = !hasVideo
     ? "Please select a video file"
     : !hasTitle
@@ -33,6 +39,37 @@ export default function UploadPage() {
   function handleFileChange(file: File | null) {
     setSelectedFile(file);
     setPreviewUrl(file ? URL.createObjectURL(file) : "");
+    setUploadError("");
+    setSuccessMessage("");
+    setPublicUrl("");
+  }
+
+  async function handleUpload() {
+    if (!selectedFile || !hasTitle) {
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError("");
+    setSuccessMessage("");
+    setPublicUrl("");
+
+    const filePath = `videos/${Date.now()}-${selectedFile.name}`;
+    const { error } = await supabase.storage
+      .from("videos")
+      .upload(filePath, selectedFile);
+
+    if (error) {
+      setUploadError(error.message);
+      setIsUploading(false);
+      return;
+    }
+
+    const { data } = supabase.storage.from("videos").getPublicUrl(filePath);
+
+    setPublicUrl(data.publicUrl);
+    setSuccessMessage("Video uploaded to Supabase Storage.");
+    setIsUploading(false);
   }
 
   return (
@@ -82,7 +119,12 @@ export default function UploadPage() {
                   id="video-title"
                   type="text"
                   value={videoTitle}
-                  onChange={(event) => setVideoTitle(event.target.value)}
+                  onChange={(event) => {
+                    setVideoTitle(event.target.value);
+                    setUploadError("");
+                    setSuccessMessage("");
+                    setPublicUrl("");
+                  }}
                   placeholder="Enter video title"
                   className="mt-2 w-full rounded-md border border-white/15 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-500 focus:ring-2 focus:ring-white"
                 />
@@ -118,6 +160,7 @@ export default function UploadPage() {
           <div className="mt-6 space-y-2">
             <button
               type="button"
+              onClick={handleUpload}
               disabled={!canSave}
               className={`w-full rounded-md px-4 py-3 text-sm font-medium transition ${
                 canSave
@@ -125,12 +168,30 @@ export default function UploadPage() {
                   : "bg-white/20 text-neutral-400"
               }`}
             >
-              Save to Review Feed
+              {isUploading ? "Uploading..." : "Save to Review Feed"}
             </button>
             {validationMessage ? (
               <p className="text-center text-xs text-neutral-400">
                 {validationMessage}
               </p>
+            ) : null}
+            {uploadError ? (
+              <p className="text-center text-xs text-red-300">{uploadError}</p>
+            ) : null}
+            {successMessage ? (
+              <p className="text-center text-xs text-green-300">
+                {successMessage}
+              </p>
+            ) : null}
+            {publicUrl ? (
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block break-all text-center text-xs text-neutral-300 underline decoration-white/30 underline-offset-4"
+              >
+                {publicUrl}
+              </a>
             ) : null}
           </div>
         </div>
