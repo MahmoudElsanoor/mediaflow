@@ -54,7 +54,7 @@ export default function FeedPage() {
   }
 
   return (
-    <main className="h-screen overflow-y-auto snap-y snap-mandatory scroll-pt-24 bg-neutral-950 px-5 py-24 text-white">
+    <main className="h-svh overflow-y-auto snap-y snap-mandatory scroll-pt-20 bg-neutral-950 px-4 pb-4 pt-20 text-white">
       <header className="fixed left-0 top-0 z-10 flex w-full items-center justify-between bg-neutral-950/95 px-6 py-5">
         <Link
           href="/"
@@ -73,10 +73,10 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
+      <section className="mx-auto flex w-full max-w-sm flex-col gap-3">
         <StatusSummary statusCounts={statusCounts} statuses={statuses} />
 
-        <div className="grid grid-cols-4 gap-2 rounded-lg border border-white/10 bg-neutral-900 p-2">
+        <div className="grid grid-cols-4 gap-1.5 rounded-lg border border-white/10 bg-neutral-900 p-1.5">
           {filterStatuses.map((filter) => {
             const isSelected = activeFilter === filter;
 
