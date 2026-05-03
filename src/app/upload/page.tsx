@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
 
   useEffect(() => {
     if (!previewUrl) {
@@ -65,6 +66,20 @@ export default function UploadPage() {
 
           {selectedFile ? (
             <div className="mt-6 space-y-4 text-left">
+              <label htmlFor="video-title" className="block">
+                <span className="text-sm font-medium text-neutral-200">
+                  Video title
+                </span>
+                <input
+                  id="video-title"
+                  type="text"
+                  value={videoTitle}
+                  onChange={(event) => setVideoTitle(event.target.value)}
+                  placeholder="Enter video title"
+                  className="mt-2 w-full rounded-md border border-white/15 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-500 focus:ring-2 focus:ring-white"
+                />
+              </label>
+
               <div className="rounded-md border border-white/10 bg-neutral-950 p-3">
                 <p className="text-sm font-medium text-white">
                   {selectedFile.name}
@@ -85,6 +100,19 @@ export default function UploadPage() {
                   Video preview unavailable.
                 </video>
               ) : null}
+
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  disabled
+                  className="w-full rounded-md bg-white/20 px-4 py-3 text-sm font-medium text-neutral-400"
+                >
+                  Save to Review Feed
+                </button>
+                <p className="text-center text-xs text-neutral-500">
+                  Real upload will connect here next.
+                </p>
+              </div>
             </div>
           ) : (
             <p className="mt-5 text-sm text-neutral-300">
