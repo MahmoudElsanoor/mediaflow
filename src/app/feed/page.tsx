@@ -15,6 +15,17 @@ const statusStyles: Record<ReviewStatus, string> = {
 
 export default function FeedPage() {
   const [videos, setVideos] = useState<MockVideo[]>(initialVideos);
+  const statusCounts = videos.reduce<Record<ReviewStatus, number>>(
+    (counts, video) => ({
+      ...counts,
+      [video.status]: counts[video.status] + 1,
+    }),
+    {
+      Pending: 0,
+      Approved: 0,
+      Rejected: 0,
+    },
+  );
 
   function updateVideo(id: number, updates: Partial<MockVideo>) {
     setVideos((currentVideos) =>
@@ -44,6 +55,22 @@ export default function FeedPage() {
       </header>
 
       <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
+        <div className="grid grid-cols-3 gap-2 rounded-lg border border-white/10 bg-neutral-900 p-2">
+          {(["Pending", "Approved", "Rejected"] as ReviewStatus[]).map(
+            (status) => (
+              <div
+                key={status}
+                className="rounded-md bg-neutral-950 px-2 py-3 text-center"
+              >
+                <p className="text-lg font-semibold text-white">
+                  {statusCounts[status]}
+                </p>
+                <p className="mt-1 text-xs text-neutral-400">{status}</p>
+              </div>
+            ),
+          )}
+        </div>
+
         {videos.map((video) => (
           <ReviewCard
             key={video.id}
