@@ -1,7 +1,7 @@
 export type ReviewStatus = "Pending" | "Approved" | "Rejected";
 
 export type MockVideo = {
-  id: number;
+  id: string;
   title: string;
   videoUrl: string;
   status: ReviewStatus;

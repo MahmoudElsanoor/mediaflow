@@ -7,8 +7,8 @@ import type { MockVideo, ReviewStatus } from "@/types/video";
 type ReviewCardProps = {
   video: MockVideo;
   statusStyles: Record<ReviewStatus, string>;
-  onUpdateVideo: (id: number, updates: Partial<MockVideo>) => void;
-  onSaveNote: (id: number, commentText: string) => void;
+  onUpdateVideo: (id: string, updates: Partial<MockVideo>) => void;
+  onSaveNote: (id: string, commentText: string) => void;
 };
 
 export default function ReviewCard({

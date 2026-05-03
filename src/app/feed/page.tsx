@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import ReviewCard from "@/components/ReviewCard";
 import StatusSummary from "@/components/StatusSummary";
-import { initialVideos } from "@/data/mockVideos";
+import { supabase } from "@/lib/supabase";
 import type { MockVideo, ReviewStatus } from "@/types/video";
 
 type FilterStatus = "All" | ReviewStatus;
@@ -19,9 +19,25 @@ const statusStyles: Record<ReviewStatus, string> = {
   Rejected: "bg-red-400/15 text-red-200",
 };
 
+type VideoRow = {
+  id: string;
+  title: string;
+  playback_url: string;
+  status: string | null;
+  note: string | null;
+};
+
+function toReviewStatus(status: string | null): ReviewStatus {
+  return statuses.includes(status as ReviewStatus)
+    ? (status as ReviewStatus)
+    : "Pending";
+}
+
 export default function FeedPage() {
-  const [videos, setVideos] = useState<MockVideo[]>(initialVideos);
+  const [videos, setVideos] = useState<MockVideo[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("All");
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const statusCounts = videos.reduce<Record<ReviewStatus, number>>(
     (counts, video) => ({
       ...counts,
@@ -38,7 +54,48 @@ export default function FeedPage() {
       ? videos
       : videos.filter((video) => video.status === activeFilter);
 
-  function updateVideo(id: number, updates: Partial<MockVideo>) {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadVideos() {
+      const { data, error } = await supabase
+        .from("videos")
+        .select("id,title,playback_url,status,note")
+        .order("created_at", { ascending: false });
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        setFetchError(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      const nextVideos: MockVideo[] = (data as VideoRow[]).map((row) => ({
+        id: row.id,
+        title: row.title,
+        videoUrl: row.playback_url,
+        status: toReviewStatus(row.status),
+        savedNote: row.note ?? "",
+        commentText: "",
+        isCommentOpen: false,
+      }));
+
+      setVideos(nextVideos);
+      setFetchError("");
+      setIsLoading(false);
+    }
+
+    loadVideos();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function updateVideo(id: string, updates: Partial<MockVideo>) {
     setVideos((currentVideos) =>
       currentVideos.map((video) =>
         video.id === id ? { ...video, ...updates } : video,
@@ -46,7 +103,7 @@ export default function FeedPage() {
     );
   }
 
-  function saveNote(id: number, commentText: string) {
+  function saveNote(id: string, commentText: string) {
     updateVideo(id, {
       savedNote: commentText,
       isCommentOpen: false,
@@ -97,15 +154,35 @@ export default function FeedPage() {
           })}
         </div>
 
-        {filteredVideos.map((video) => (
-          <ReviewCard
-            key={video.id}
-            video={video}
-            statusStyles={statusStyles}
-            onUpdateVideo={updateVideo}
-            onSaveNote={saveNote}
-          />
-        ))}
+        {isLoading ? (
+          <p className="rounded-lg border border-white/10 bg-neutral-900 p-4 text-center text-sm text-neutral-300">
+            Loading review feed...
+          </p>
+        ) : null}
+
+        {fetchError ? (
+          <p className="rounded-lg border border-red-400/20 bg-red-950/40 p-4 text-center text-sm text-red-200">
+            {fetchError}
+          </p>
+        ) : null}
+
+        {!isLoading && !fetchError && videos.length === 0 ? (
+          <p className="rounded-lg border border-white/10 bg-neutral-900 p-4 text-center text-sm text-neutral-300">
+            No review videos yet.
+          </p>
+        ) : null}
+
+        {!isLoading &&
+          !fetchError &&
+          filteredVideos.map((video) => (
+            <ReviewCard
+              key={video.id}
+              video={video}
+              statusStyles={statusStyles}
+              onUpdateVideo={updateVideo}
+              onSaveNote={saveNote}
+            />
+          ))}
       </section>
     </main>
   );
