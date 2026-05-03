@@ -66,9 +66,22 @@ export default function UploadPage() {
     }
 
     const { data } = supabase.storage.from("videos").getPublicUrl(filePath);
+    const { error: insertError } = await supabase.from("videos").insert({
+      title: videoTitle.trim(),
+      playback_url: data.publicUrl,
+      status: "Pending",
+      note: "",
+    });
+
+    if (insertError) {
+      setUploadError(insertError.message);
+      setPublicUrl(data.publicUrl);
+      setIsUploading(false);
+      return;
+    }
 
     setPublicUrl(data.publicUrl);
-    setSuccessMessage("Video uploaded to Supabase Storage.");
+    setSuccessMessage("Video saved to review feed.");
     setIsUploading(false);
   }
 
