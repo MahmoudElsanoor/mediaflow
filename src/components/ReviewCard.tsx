@@ -14,11 +14,19 @@ export default function ReviewCard({
   onSaveNote,
 }: ReviewCardProps) {
   return (
-    <article className="w-full overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-2xl shadow-black/40">
-      <div className="flex aspect-[9/16] items-center justify-center bg-neutral-800">
-        <span className="text-sm font-medium text-neutral-400">
-          Video Placeholder
-        </span>
+    <article className="w-full snap-start overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-2xl shadow-black/40">
+      <div className="aspect-[9/16] bg-neutral-800">
+        <video
+          className="h-full w-full bg-neutral-800 object-cover"
+          src={video.videoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        >
+          Video preview unavailable.
+        </video>
       </div>
 
       <div className="space-y-5 p-5">

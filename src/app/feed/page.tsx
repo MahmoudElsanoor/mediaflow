@@ -54,8 +54,8 @@ export default function FeedPage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-neutral-950 px-5 py-24 text-white">
-      <header className="absolute left-0 top-0 flex w-full items-center justify-between px-6 py-5">
+    <main className="h-screen overflow-y-auto snap-y snap-mandatory scroll-pt-24 bg-neutral-950 px-5 py-24 text-white">
+      <header className="fixed left-0 top-0 z-10 flex w-full items-center justify-between bg-neutral-950/95 px-6 py-5">
         <Link
           href="/"
           className="text-sm font-medium text-neutral-300 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-950"
