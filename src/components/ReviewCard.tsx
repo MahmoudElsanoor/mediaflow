@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
 import type { MockVideo, ReviewStatus } from "@/types/video";
 
 type ReviewCardProps = {
@@ -13,13 +17,48 @@ export default function ReviewCard({
   onUpdateVideo,
   onSaveNote,
 }: ReviewCardProps) {
+  const cardRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const cardElement = cardRef.current;
+    const videoElement = videoRef.current;
+
+    if (!cardElement || !videoElement) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio >= 0.7) {
+          videoElement.play().catch(() => {
+            videoElement.pause();
+          });
+          return;
+        }
+
+        videoElement.pause();
+      },
+      { threshold: 0.7 },
+    );
+
+    observer.observe(cardElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <article className="w-full snap-start overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-2xl shadow-black/40">
+    <article
+      ref={cardRef}
+      className="w-full snap-start overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-2xl shadow-black/40"
+    >
       <div className="aspect-[9/16] bg-neutral-800">
         <video
+          ref={videoRef}
           className="h-full w-full bg-neutral-800 object-cover"
           src={video.videoUrl}
-          autoPlay
           muted
           loop
           playsInline
