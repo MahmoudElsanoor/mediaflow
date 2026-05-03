@@ -8,7 +8,10 @@ import StatusSummary from "@/components/StatusSummary";
 import { initialVideos } from "@/data/mockVideos";
 import type { MockVideo, ReviewStatus } from "@/types/video";
 
+type FilterStatus = "All" | ReviewStatus;
+
 const statuses: ReviewStatus[] = ["Pending", "Approved", "Rejected"];
+const filterStatuses: FilterStatus[] = ["All", ...statuses];
 
 const statusStyles: Record<ReviewStatus, string> = {
   Pending: "bg-amber-400/15 text-amber-200",
@@ -18,6 +21,7 @@ const statusStyles: Record<ReviewStatus, string> = {
 
 export default function FeedPage() {
   const [videos, setVideos] = useState<MockVideo[]>(initialVideos);
+  const [activeFilter, setActiveFilter] = useState<FilterStatus>("All");
   const statusCounts = videos.reduce<Record<ReviewStatus, number>>(
     (counts, video) => ({
       ...counts,
@@ -29,6 +33,10 @@ export default function FeedPage() {
       Rejected: 0,
     },
   );
+  const filteredVideos =
+    activeFilter === "All"
+      ? videos
+      : videos.filter((video) => video.status === activeFilter);
 
   function updateVideo(id: number, updates: Partial<MockVideo>) {
     setVideos((currentVideos) =>
@@ -60,7 +68,28 @@ export default function FeedPage() {
       <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
         <StatusSummary statusCounts={statusCounts} statuses={statuses} />
 
-        {videos.map((video) => (
+        <div className="grid grid-cols-4 gap-2 rounded-lg border border-white/10 bg-neutral-900 p-2">
+          {filterStatuses.map((filter) => {
+            const isSelected = activeFilter === filter;
+
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setActiveFilter(filter)}
+                className={`rounded-md px-2 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-900 ${
+                  isSelected
+                    ? "bg-white text-neutral-950"
+                    : "bg-neutral-950 text-neutral-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {filter}
+              </button>
+            );
+          })}
+        </div>
+
+        {filteredVideos.map((video) => (
           <ReviewCard
             key={video.id}
             video={video}
