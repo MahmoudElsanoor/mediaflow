@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { MockVideo, ReviewStatus } from "@/types/video";
 
@@ -19,6 +19,7 @@ export default function ReviewCard({
 }: ReviewCardProps) {
   const cardRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const cardElement = cardRef.current;
@@ -54,18 +55,25 @@ export default function ReviewCard({
       ref={cardRef}
       className="w-full snap-start overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-2xl shadow-black/40"
     >
-      <div className="aspect-[9/16] bg-neutral-800">
+      <div className="relative aspect-[9/16] bg-neutral-800">
         <video
           ref={videoRef}
           className="h-full w-full bg-neutral-800 object-cover"
           src={video.videoUrl}
-          muted
+          muted={isMuted}
           loop
           playsInline
           preload="metadata"
         >
           Video preview unavailable.
         </video>
+        <button
+          type="button"
+          onClick={() => setIsMuted((current) => !current)}
+          className="absolute bottom-3 right-3 rounded-md bg-black/70 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          {isMuted ? "Muted" : "Sound On"}
+        </button>
       </div>
 
       <div className="space-y-5 p-5">
