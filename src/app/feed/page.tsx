@@ -38,6 +38,7 @@ export default function FeedPage() {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("All");
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [actionError, setActionError] = useState("");
   const statusCounts = videos.reduce<Record<ReviewStatus, number>>(
     (counts, video) => ({
       ...counts,
@@ -95,19 +96,63 @@ export default function FeedPage() {
     };
   }, []);
 
-  function updateVideo(id: string, updates: Partial<MockVideo>) {
-    setVideos((currentVideos) =>
-      currentVideos.map((video) =>
+  async function updateVideo(id: string, updates: Partial<MockVideo>) {
+    let previousVideos: MockVideo[] = [];
+
+    setVideos((currentVideos) => {
+      previousVideos = currentVideos;
+
+      return currentVideos.map((video) =>
         video.id === id ? { ...video, ...updates } : video,
-      ),
-    );
+      );
+    });
+
+    if (!updates.status) {
+      return;
+    }
+
+    setActionError("");
+
+    const { error } = await supabase
+      .from("videos")
+      .update({ status: updates.status })
+      .eq("id", id);
+
+    if (error) {
+      setVideos(previousVideos);
+      setActionError(`Could not save status change: ${error.message}`);
+    }
   }
 
-  function saveNote(id: string, commentText: string) {
-    updateVideo(id, {
-      savedNote: commentText,
-      isCommentOpen: false,
+  async function saveNote(id: string, commentText: string) {
+    let previousVideos: MockVideo[] = [];
+
+    setVideos((currentVideos) => {
+      previousVideos = currentVideos;
+
+      return currentVideos.map((video) =>
+        video.id === id
+          ? {
+              ...video,
+              savedNote: commentText,
+              isCommentOpen: false,
+            }
+          : video,
+      );
     });
+
+    setActionError("");
+
+    const { error } = await supabase
+      .from("videos")
+      .update({ note: commentText })
+      .eq("id", id);
+
+    if (error) {
+      setVideos(previousVideos);
+      setActionError(`Could not save note: ${error.message}`);
+      return;
+    }
   }
 
   return (
@@ -163,6 +208,12 @@ export default function FeedPage() {
         {fetchError ? (
           <p className="rounded-lg border border-red-400/20 bg-red-950/40 p-4 text-center text-sm text-red-200">
             {fetchError}
+          </p>
+        ) : null}
+
+        {actionError ? (
+          <p className="rounded-lg border border-red-400/20 bg-red-950/40 p-4 text-center text-sm text-red-200">
+            {actionError}
           </p>
         ) : null}
 
