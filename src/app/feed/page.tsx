@@ -62,7 +62,15 @@ export default function FeedPage() {
         >
           Back
         </Link>
-        <span className="text-sm font-semibold text-white">MediaFlow</span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-semibold text-white">MediaFlow</span>
+          <Link
+            href="/upload"
+            className="text-sm font-medium text-neutral-300 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-950"
+          >
+            Upload
+          </Link>
+        </div>
       </header>
 
       <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
