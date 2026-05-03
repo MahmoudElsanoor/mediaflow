@@ -21,6 +21,14 @@ export default function UploadPage() {
   const fileSizeInMb = selectedFile
     ? (selectedFile.size / 1024 / 1024).toFixed(2)
     : null;
+  const hasVideo = Boolean(selectedFile);
+  const hasTitle = videoTitle.trim().length > 0;
+  const canSave = hasVideo && hasTitle;
+  const validationMessage = !hasVideo
+    ? "Please select a video file"
+    : !hasTitle
+      ? "Please enter a video title"
+      : "";
 
   function handleFileChange(file: File | null) {
     setSelectedFile(file);
@@ -100,25 +108,31 @@ export default function UploadPage() {
                   Video preview unavailable.
                 </video>
               ) : null}
-
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  disabled
-                  className="w-full rounded-md bg-white/20 px-4 py-3 text-sm font-medium text-neutral-400"
-                >
-                  Save to Review Feed
-                </button>
-                <p className="text-center text-xs text-neutral-500">
-                  Real upload will connect here next.
-                </p>
-              </div>
             </div>
           ) : (
             <p className="mt-5 text-sm text-neutral-300">
               Choose a local video to preview it here.
             </p>
           )}
+
+          <div className="mt-6 space-y-2">
+            <button
+              type="button"
+              disabled={!canSave}
+              className={`w-full rounded-md px-4 py-3 text-sm font-medium transition ${
+                canSave
+                  ? "bg-white text-neutral-950 hover:bg-neutral-200"
+                  : "bg-white/20 text-neutral-400"
+              }`}
+            >
+              Save to Review Feed
+            </button>
+            {validationMessage ? (
+              <p className="text-center text-xs text-neutral-400">
+                {validationMessage}
+              </p>
+            ) : null}
+          </div>
         </div>
       </section>
     </main>
