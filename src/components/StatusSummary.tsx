@@ -10,16 +10,18 @@ export default function StatusSummary({
   statuses,
 }: StatusSummaryProps) {
   return (
-    <div className="grid grid-cols-3 gap-2 rounded-lg border border-white/10 bg-neutral-900 p-2">
+    <div className="grid grid-cols-3 gap-1.5">
       {statuses.map((status) => (
         <div
           key={status}
-          className="rounded-md bg-neutral-950 px-2 py-3 text-center"
+          className="rounded-md border border-white/10 bg-neutral-950/85 px-2 py-1 text-center"
         >
-          <p className="text-lg font-semibold text-white">
+          <p className="text-sm font-semibold leading-none text-white">
             {statusCounts[status]}
           </p>
-          <p className="mt-1 text-xs text-neutral-400">{status}</p>
+          <p className="mt-1 text-[10px] leading-none text-neutral-400">
+            {status}
+          </p>
         </div>
       ))}
     </div>

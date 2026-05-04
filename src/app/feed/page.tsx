@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import ReviewCard from "@/components/ReviewCard";
-import StatusSummary from "@/components/StatusSummary";
 import { supabase } from "@/lib/supabase";
 import type { MockVideo, ReviewStatus } from "@/types/video";
 
@@ -39,6 +38,7 @@ export default function FeedPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [isMuted, setIsMuted] = useState(true);
   const statusCounts = videos.reduce<Record<ReviewStatus, number>>(
     (counts, video) => ({
       ...counts,
@@ -54,6 +54,11 @@ export default function FeedPage() {
     activeFilter === "All"
       ? videos
       : videos.filter((video) => video.status === activeFilter);
+  const totalCount = videos.length;
+
+  function getFilterCount(filter: FilterStatus) {
+    return filter === "All" ? totalCount : statusCounts[filter];
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -156,8 +161,8 @@ export default function FeedPage() {
   }
 
   return (
-    <main className="h-svh overflow-y-auto snap-y snap-mandatory scroll-pt-20 bg-neutral-950 px-4 pb-4 pt-20 text-white">
-      <header className="fixed left-0 top-0 z-10 flex w-full items-center justify-between bg-neutral-950/95 px-6 py-5">
+    <main className="h-svh overflow-y-auto snap-y snap-mandatory scroll-pt-28 bg-neutral-950 px-4 pb-4 pt-28 text-white">
+      <header className="fixed left-0 top-0 z-20 flex w-full items-center justify-between border-b border-white/10 bg-neutral-950/95 px-5 py-4 backdrop-blur">
         <Link
           href="/"
           className="text-sm font-medium text-neutral-300 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-950"
@@ -175,10 +180,11 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <section className="mx-auto flex w-full max-w-sm flex-col gap-3">
-        <StatusSummary statusCounts={statusCounts} statuses={statuses} />
-
-        <div className="grid grid-cols-4 gap-1.5 rounded-lg border border-white/10 bg-neutral-900 p-1.5">
+      <section
+        data-testid="feed-controls"
+        className="fixed inset-x-0 top-[53px] z-20 border-b border-white/10 bg-neutral-950/90 px-3 py-2 backdrop-blur"
+      >
+        <div className="mx-auto grid w-full max-w-sm grid-cols-4 gap-1 rounded-md border border-white/10 bg-neutral-900/90 p-1">
           {filterStatuses.map((filter) => {
             const isSelected = activeFilter === filter;
 
@@ -186,19 +192,27 @@ export default function FeedPage() {
               <button
                 key={filter}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => setActiveFilter(filter)}
-                className={`rounded-md px-2 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-900 ${
+                className={`rounded px-1.5 py-1 text-center transition focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-900 ${
                   isSelected
                     ? "bg-white text-neutral-950"
-                    : "bg-neutral-950 text-neutral-300 hover:bg-white/10 hover:text-white"
+                    : "bg-neutral-950/80 text-neutral-300 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                {filter}
+                <span className="block text-[11px] font-semibold leading-none">
+                  {filter}
+                </span>
+                <span className="mt-0.5 block text-[10px] font-medium leading-none opacity-80">
+                  {getFilterCount(filter)}
+                </span>
               </button>
             );
           })}
         </div>
+      </section>
 
+      <section className="mx-auto flex w-full max-w-sm flex-col gap-3">
         {isLoading ? (
           <p className="rounded-lg border border-white/10 bg-neutral-900 p-4 text-center text-sm text-neutral-300">
             Loading review feed...
@@ -230,6 +244,8 @@ export default function FeedPage() {
               key={video.id}
               video={video}
               statusStyles={statusStyles}
+              isMuted={isMuted}
+              onToggleMuted={() => setIsMuted((current) => !current)}
               onUpdateVideo={updateVideo}
               onSaveNote={saveNote}
             />

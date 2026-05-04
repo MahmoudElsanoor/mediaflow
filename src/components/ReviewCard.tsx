@@ -7,6 +7,8 @@ import type { MockVideo, ReviewStatus } from "@/types/video";
 type ReviewCardProps = {
   video: MockVideo;
   statusStyles: Record<ReviewStatus, string>;
+  isMuted: boolean;
+  onToggleMuted: () => void;
   onUpdateVideo: (id: string, updates: Partial<MockVideo>) => void;
   onSaveNote: (id: string, commentText: string) => void;
 };
@@ -14,31 +16,45 @@ type ReviewCardProps = {
 export default function ReviewCard({
   video,
   statusStyles,
+  isMuted,
+  onToggleMuted,
   onUpdateVideo,
   onSaveNote,
 }: ReviewCardProps) {
   const cardRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
+  const wasInViewRef = useRef(false);
+  const [isInView, setIsInView] = useState(false);
+  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const cardElement = cardRef.current;
-    const videoElement = videoRef.current;
 
-    if (!cardElement || !videoElement) {
+    if (!cardElement) {
       return;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.intersectionRatio >= 0.7) {
-          videoElement.play().catch(() => {
-            videoElement.pause();
-          });
-          return;
+        const nextIsInView = entry.intersectionRatio >= 0.7;
+        const videoElement = videoRef.current;
+
+        if (nextIsInView && !wasInViewRef.current) {
+          if (videoElement) {
+            videoElement.currentTime = 0;
+          }
+
+          setProgress(0);
+          setIsManuallyPaused(false);
         }
 
-        videoElement.pause();
+        if (!nextIsInView && wasInViewRef.current) {
+          videoElement?.pause();
+        }
+
+        wasInViewRef.current = nextIsInView;
+        setIsInView(nextIsInView);
       },
       { threshold: 0.7 },
     );
@@ -50,10 +66,69 @@ export default function ReviewCard({
     };
   }, []);
 
+  useEffect(() => {
+    const videoElement = videoRef.current;
+
+    if (!videoElement) {
+      return;
+    }
+
+    if (!isInView || isManuallyPaused) {
+      videoElement.pause();
+      return;
+    }
+
+    videoElement.play().catch(() => {
+      videoElement.pause();
+    });
+  }, [isInView, isManuallyPaused]);
+
+  function updateProgress() {
+    const videoElement = videoRef.current;
+
+    if (!videoElement || !videoElement.duration) {
+      setProgress(0);
+      return;
+    }
+
+    setProgress((videoElement.currentTime / videoElement.duration) * 100);
+  }
+
+  function togglePlayback() {
+    const videoElement = videoRef.current;
+
+    if (!videoElement) {
+      return;
+    }
+
+    if (isManuallyPaused) {
+      setIsManuallyPaused(false);
+      return;
+    }
+
+    setIsManuallyPaused(true);
+    videoElement.pause();
+  }
+
+  function skipBy(seconds: number) {
+    const videoElement = videoRef.current;
+
+    if (!videoElement || !videoElement.duration) {
+      return;
+    }
+
+    videoElement.currentTime = Math.min(
+      Math.max(videoElement.currentTime + seconds, 0),
+      videoElement.duration,
+    );
+    updateProgress();
+  }
+
   return (
     <article
       ref={cardRef}
-      className="relative h-[calc(100svh-6rem)] max-h-[760px] w-full snap-start overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-2xl shadow-black/40"
+      data-testid="review-card"
+      className="relative h-[calc(100svh-7rem)] min-h-[440px] max-h-[760px] w-full snap-start overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-2xl shadow-black/40"
     >
       <video
         ref={videoRef}
@@ -61,6 +136,9 @@ export default function ReviewCard({
         src={video.videoUrl}
         muted={isMuted}
         loop
+        onDurationChange={updateProgress}
+        onLoadedMetadata={updateProgress}
+        onTimeUpdate={updateProgress}
         playsInline
         preload="metadata"
       >
@@ -69,13 +147,49 @@ export default function ReviewCard({
 
       <button
         type="button"
-        onClick={() => setIsMuted((current) => !current)}
-        className="absolute right-3 top-3 rounded-md bg-black/70 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white"
+        aria-label={isManuallyPaused ? "Play video" : "Pause video"}
+        data-testid="playback-toggle"
+        onClick={togglePlayback}
+        className="absolute inset-0 z-0 cursor-pointer bg-transparent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white/80"
+      />
+
+      <button
+        type="button"
+        aria-label={isMuted ? "Turn sound on" : "Mute video"}
+        data-testid="sound-toggle"
+        onClick={onToggleMuted}
+        className="absolute right-3 top-3 z-10 rounded-md bg-black/70 px-3 py-1.5 text-base font-medium leading-none text-white transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white"
       >
-        {isMuted ? "Muted" : "Sound On"}
+        {isMuted ? "🔇" : "🔊"}
       </button>
 
-      <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4 pt-24">
+      {isManuallyPaused ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <span className="rounded-md bg-black/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+              Paused
+            </span>
+            <div className="pointer-events-auto flex gap-2">
+              <button
+                type="button"
+                onClick={() => skipBy(-5)}
+                className="rounded-md bg-black/70 px-3 py-2 text-xs font-medium text-white transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white"
+              >
+                -5s
+              </button>
+              <button
+                type="button"
+                onClick={() => skipBy(5)}
+                className="rounded-md bg-black/70 px-3 py-2 text-xs font-medium text-white transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white"
+              >
+                +5s
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="absolute inset-x-0 bottom-0 z-10 space-y-3 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4 pt-24">
         <div className="flex items-end justify-between gap-3">
           <h1 className="text-base font-semibold tracking-normal text-white">
             {video.title}
@@ -147,6 +261,17 @@ export default function ReviewCard({
             Comment
           </button>
         </div>
+      </div>
+
+      <div
+        data-testid="progress-track"
+        className="absolute inset-x-0 bottom-0 z-20 h-1 bg-white/15"
+      >
+        <div
+          data-testid="progress-fill"
+          className="h-full bg-white transition-[width] duration-150 ease-linear"
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </article>
   );
