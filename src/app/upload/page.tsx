@@ -94,7 +94,9 @@ export default function UploadPage() {
         >
           Back
         </Link>
-        <span className="text-sm font-semibold text-white">MediaFlow</span>
+        <span className="text-sm font-semibold text-white">
+          CosmoMed Video Review
+        </span>
       </header>
 
       <section className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-sm flex-col items-center justify-center text-center">

@@ -4,7 +4,9 @@ export default function Home() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-6 text-white">
       <section className="flex w-full max-w-sm flex-col items-center text-center">
-        <h1 className="text-4xl font-semibold tracking-normal">MediaFlow</h1>
+        <h1 className="text-4xl font-semibold tracking-normal">
+          CosmoMed Video Review
+        </h1>
         <p className="mt-3 text-base text-neutral-300">
           FNG Marketing Video Review
         </p>

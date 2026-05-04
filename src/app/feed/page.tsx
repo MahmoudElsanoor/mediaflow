@@ -171,7 +171,9 @@ export default function FeedPage() {
           Back
         </Link>
         <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold text-white">MediaFlow</span>
+          <span className="text-sm font-semibold text-white">
+            CosmoMed Video Review
+          </span>
           <Link
             href="/upload"
             className="text-sm font-medium text-neutral-300 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-950"

@@ -133,7 +133,7 @@ export default function AdminPage() {
 
   async function deleteVideo(video: AdminVideo) {
     const shouldDelete = window.confirm(
-      `Delete "${video.title}" from MediaFlow?`,
+      `Delete "${video.title}" from CosmoMed Video Review?`,
     );
 
     if (!shouldDelete) {
@@ -197,7 +197,7 @@ export default function AdminPage() {
           Feed
         </Link>
         <span className="text-sm font-semibold text-white">
-          MediaFlow Admin
+          CosmoMed Video Review Admin
         </span>
         <Link
           href="/upload"
