@@ -67,6 +67,7 @@ export default function FeedPage() {
       const { data, error } = await supabase
         .from("videos")
         .select("id,title,playback_url,status,note")
+        .order("sort_order", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false });
 
       if (!isMounted) {
